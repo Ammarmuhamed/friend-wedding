@@ -955,6 +955,28 @@
         this.audio.loop = true;
         this.audio.volume = 0.5;
         this.bindEvents();
+        this.autoPlay();
+      },
+
+      autoPlay() {
+        this.audio.play()
+          .then(() => {
+            this.btn.classList.add('playing');
+            this.btn.setAttribute('aria-label', 'Pause music');
+            this.isPlaying = true;
+          })
+          .catch(() => {
+            // Autoplay blocked - wait for user interaction
+            const startOnInteraction = () => {
+              this.play();
+              document.removeEventListener('click', startOnInteraction);
+              document.removeEventListener('scroll', startOnInteraction);
+              document.removeEventListener('touchstart', startOnInteraction);
+            };
+            document.addEventListener('click', startOnInteraction);
+            document.addEventListener('scroll', startOnInteraction);
+            document.addEventListener('touchstart', startOnInteraction);
+          });
       },
 
       bindEvents() {

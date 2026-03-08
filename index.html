@@ -220,6 +220,7 @@
 
     .name-first {
       color: var(--parchment);
+      font-style: italic;
       display: block;
     }
 
@@ -234,7 +235,7 @@
     }
 
     .name-second {
-      color: var(--blush);
+      color: var(--parchment);
       font-style: italic;
       display: block;
     }
@@ -959,24 +960,38 @@
       },
 
       autoPlay() {
-        this.audio.play()
-          .then(() => {
-            this.btn.classList.add('playing');
-            this.btn.setAttribute('aria-label', 'Pause music');
-            this.isPlaying = true;
-          })
-          .catch(() => {
-            // Autoplay blocked - wait for user interaction
-            const startOnInteraction = () => {
-              this.play();
-              document.removeEventListener('click', startOnInteraction);
-              document.removeEventListener('scroll', startOnInteraction);
-              document.removeEventListener('touchstart', startOnInteraction);
-            };
-            document.addEventListener('click', startOnInteraction);
-            document.addEventListener('scroll', startOnInteraction);
-            document.addEventListener('touchstart', startOnInteraction);
-          });
+        // Try to play immediately
+        const attemptPlay = () => {
+          this.audio.play()
+            .then(() => {
+              this.isPlaying = true;
+              this.btn.classList.add('playing');
+              this.btn.setAttribute('aria-label', 'Pause music');
+            })
+            .catch((err) => {
+              console.log('Autoplay blocked, waiting for interaction...');
+            });
+        };
+
+        // Try on load
+        attemptPlay();
+
+        // Also try after a short delay (some browsers need this)
+        setTimeout(attemptPlay, 100);
+
+        // Fallback: play on first interaction
+        const startOnInteraction = () => {
+          if (!this.isPlaying) {
+            this.play();
+          }
+          document.removeEventListener('click', startOnInteraction);
+          document.removeEventListener('scroll', startOnInteraction);
+          document.removeEventListener('touchstart', startOnInteraction);
+        };
+
+        document.addEventListener('click', startOnInteraction, { once: true });
+        document.addEventListener('scroll', startOnInteraction, { once: true });
+        document.addEventListener('touchstart', startOnInteraction, { once: true });
       },
 
       bindEvents() {
